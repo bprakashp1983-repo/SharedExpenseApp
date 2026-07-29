@@ -25,9 +25,9 @@ jobs:
       - name: List available Xcode versions
         run: ls /Applications | grep Xcode
 
-      # 3. Select the Xcode version to use
-      - name: Select Xcode 16
-        run: sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer || sudo xcode-select -switch $(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer
+      # 3. Select the latest available Xcode
+      - name: Select latest Xcode
+        run: sudo xcode-select -switch $(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer
 
       # 4. Print Xcode and Swift versions to the log
       - name: Print Xcode version
@@ -51,20 +51,11 @@ jobs:
             -project SharedExpense/SharedExpense.xcodeproj \
             -scheme SharedExpense \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty || xcodebuild build \
-              -project SharedExpense/SharedExpense.xcodeproj \
-              -scheme SharedExpense \
-              -sdk iphonesimulator \
-              -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
-              -configuration Debug \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO
 
       # 7. Run tests (if you add XCTest targets later)
       - name: Run Tests
@@ -73,7 +64,7 @@ jobs:
             -project SharedExpense/SharedExpense.xcodeproj \
             -scheme SharedExpense \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
@@ -81,7 +72,7 @@ jobs:
             -resultBundlePath TestResults.xcresult \
           || echo "No test target found — skipping tests."
 
-      # 8. Archive the build result for download (optional artifact)
+      # 8. Upload build logs as artifact on failure
       - name: Upload build log as artifact
         if: failure()
         uses: actions/upload-artifact@v4
