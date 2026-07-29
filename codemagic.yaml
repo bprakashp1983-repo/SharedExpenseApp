@@ -7,12 +7,8 @@ workflows:
 
     environment:
       xcode: latest
-      cocoapods: default
 
     scripts:
-      - name: Set Xcode version
-        script: xcode-select -p
-
       - name: Show project info
         script: |
           cd SharedExpense
@@ -27,12 +23,19 @@ workflows:
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR/output \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Zip the .app for download
+        script: |
+          cd $CM_BUILD_DIR/output
+          zip -r SharedExpense-Simulator.zip SharedExpense.app
+
     artifacts:
-      - SharedExpense/build/**/*.app
+      - $CM_BUILD_DIR/output/SharedExpense-Simulator.zip
+      - $CM_BUILD_DIR/output/SharedExpense.app
 
   ios-device-build:
     name: iOS Device Build (requires Apple Developer account)
@@ -42,7 +45,7 @@ workflows:
     environment:
       xcode: latest
       ios_signing:
-        distribution_type: development   # change to app_store for TestFlight
+        distribution_type: app_store
         bundle_identifier: com.example.SharedExpense
 
     scripts:
@@ -59,6 +62,20 @@ workflows:
 
       - name: Export IPA
         script: |
+          cat > /tmp/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
           xcodebuild -exportArchive \
             -archivePath $CM_BUILD_DIR/SharedExpense.xcarchive \
             -exportOptionsPlist /tmp/ExportOptions.plist \

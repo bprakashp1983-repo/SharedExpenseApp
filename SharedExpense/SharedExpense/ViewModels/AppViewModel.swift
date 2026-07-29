@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class AppViewModel: ObservableObject {
     @Published var groups: [ExpenseGroup] = []
 
