@@ -1,41 +1,33 @@
 name: iOS Build & Test
 
-# Triggers: runs on every push and pull request to main/develop
 on:
   push:
     branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master, develop ]
-  # Also allows manual trigger from the GitHub Actions tab
   workflow_dispatch:
 
 jobs:
   build:
     name: Build & Test on macOS
-    # GitHub-hosted macOS runner with Xcode pre-installed (free tier)
-    runs-on: macos-15          # macOS Sequoia — comes with Xcode 16.x
+    runs-on: macos-15
 
     steps:
 
-      # 1. Check out your code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Show available Xcode versions (useful for debugging)
       - name: List available Xcode versions
         run: ls /Applications | grep Xcode
 
-      # 3. Select the latest available Xcode
       - name: Select latest Xcode
         run: sudo xcode-select -switch $(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer
 
-      # 4. Print Xcode and Swift versions to the log
-      - name: Print Xcode version
+      - name: Print Xcode and Swift versions
         run: |
           xcodebuild -version
           swift --version
 
-      # 5. Cache derived data to speed up subsequent builds
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
@@ -44,20 +36,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deriveddata-
 
-      # 6. Build the app for the iOS Simulator (no signing needed)
       - name: Build for iOS Simulator
         run: |
+          set -o pipefail
           xcodebuild build \
             -project SharedExpense/SharedExpense.xcodeproj \
             -scheme SharedExpense \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            IPHONEOS_DEPLOYMENT_TARGET=18.0 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build_output.txt | grep -E "error:|warning: |BUILD FAILED|BUILD SUCCEEDED"
+          exit ${PIPESTATUS[0]}
 
-      # 7. Run tests (if you add XCTest targets later)
+      - name: Upload full build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: build_output.txt
+          retention-days: 7
+
       - name: Run Tests
         run: |
           xcodebuild test \
@@ -66,18 +68,17 @@ jobs:
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder' \
             -configuration Debug \
+            IPHONEOS_DEPLOYMENT_TARGET=18.0 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults.xcresult \
           || echo "No test target found — skipping tests."
 
-      # 8. Upload build logs as artifact on failure
-      - name: Upload build log as artifact
+      - name: Upload build logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs
-          path: |
-            ~/Library/Logs/DiagnosticReports/
+          path: ~/Library/Logs/DiagnosticReports/
           retention-days: 7
