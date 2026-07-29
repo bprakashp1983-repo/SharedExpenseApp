@@ -27,7 +27,7 @@ struct BalancesView: View {
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text(abs(amount), format: .currency(code: currencyCode))
-                                    .foregroundStyle(amount >= 0 ? .green : .red)
+                                    .foregroundStyle(amount >= 0 ? Color.green : Color.red)
                                     .bold()
                                 Text(amount >= 0 ? "gets back" : "owes")
                                     .font(.caption2)

@@ -99,10 +99,10 @@ struct AddExpenseView: View {
                         let remaining = totalAmount - customTotal
                         HStack {
                             Text("Remaining")
-                                .foregroundStyle(abs(remaining) < 0.005 ? .secondary : .red)
+                                .foregroundStyle(abs(remaining) < 0.005 ? AnyShapeStyle(.secondary) : AnyShapeStyle(Color.red))
                             Spacer()
                             Text(remaining, format: .currency(code: currencyCode))
-                                .foregroundStyle(abs(remaining) < 0.005 ? .secondary : .red)
+                                .foregroundStyle(abs(remaining) < 0.005 ? AnyShapeStyle(.secondary) : AnyShapeStyle(Color.red))
                         }
                         .font(.footnote)
                     }
