@@ -3,6 +3,7 @@ name: iOS Release Build
 # Triggers only when you push a version tag like v1.0 or v2.3.1
 on:
   push:
+    branches: [ main, master, develop ]
     tags:
       - 'v*.*'
   workflow_dispatch:

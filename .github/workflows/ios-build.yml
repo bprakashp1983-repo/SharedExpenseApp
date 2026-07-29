@@ -3,9 +3,9 @@ name: iOS Build & Test
 # Triggers: runs on every push and pull request to main/develop
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
   # Also allows manual trigger from the GitHub Actions tab
   workflow_dispatch:
 
