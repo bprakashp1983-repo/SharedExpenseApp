@@ -1,0 +1,63 @@
+name: iOS Release Build
+
+# Triggers only when you push a version tag like v1.0 or v2.3.1
+on:
+  push:
+    tags:
+      - 'v*.*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Archive & Export IPA
+    runs-on: macos-14
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Print versions
+        run: xcodebuild -version
+
+      # Build an unsigned archive (no Apple Developer account needed for simulator/ad-hoc testing)
+      - name: Build Archive
+        run: |
+          xcodebuild archive \
+            -project SharedExpense/SharedExpense.xcodeproj \
+            -scheme SharedExpense \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -archivePath ${{ github.workspace }}/build/SharedExpense.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      # Upload the .xcarchive as a downloadable artifact
+      - name: Upload Archive Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SharedExpense-${{ github.ref_name }}-archive
+          path: ${{ github.workspace }}/build/SharedExpense.xcarchive
+          retention-days: 30
+
+      # Create a GitHub Release entry automatically
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: SharedExpense ${{ github.ref_name }}
+          body: |
+            ## SharedExpense ${{ github.ref_name }}
+
+            Automated build from GitHub Actions.
+
+            ### Installing on a device
+            Download the `.xcarchive` artifact and open it in Xcode Organizer on a Mac to export a signed IPA for TestFlight or Ad-Hoc distribution.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,31 @@
+# Xcode build output
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+
+# Xcode user-specific files
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# CocoaPods (not used here, but just in case)
+Pods/
+Podfile.lock
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# GitHub Actions test results
+TestResults.xcresult/
