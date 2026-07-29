@@ -4,10 +4,9 @@ DerivedData/
 *.xcarchive
 *.ipa
 
-# Xcode user-specific files
+# Xcode user-specific files (NOT xcshareddata — that must be committed)
 *.xcuserstate
 xcuserdata/
-*.xcworkspace/xcuserdata/
 
 # Swift Package Manager
 .build/
