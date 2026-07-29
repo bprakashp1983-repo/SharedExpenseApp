@@ -1,0 +1,68 @@
+workflows:
+
+  ios-simulator-build:
+    name: iOS Simulator Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: 15.4
+      cocoapods: default
+
+    scripts:
+      - name: Set Xcode version
+        script: xcode-select -p
+
+      - name: Show project info
+        script: |
+          cd SharedExpense
+          xcodebuild -list -project SharedExpense.xcodeproj
+
+      - name: Build for iOS Simulator
+        script: |
+          cd SharedExpense
+          xcodebuild build \
+            -project SharedExpense.xcodeproj \
+            -scheme SharedExpense \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+    artifacts:
+      - SharedExpense/build/**/*.app
+
+  ios-device-build:
+    name: iOS Device Build (requires Apple Developer account)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: 15.4
+      ios_signing:
+        distribution_type: development   # change to app_store for TestFlight
+        bundle_identifier: com.example.SharedExpense
+
+    scripts:
+      - name: Build for iOS Device
+        script: |
+          cd SharedExpense
+          xcodebuild archive \
+            -project SharedExpense.xcodeproj \
+            -scheme SharedExpense \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath $CM_BUILD_DIR/SharedExpense.xcarchive \
+            -configuration Release
+
+      - name: Export IPA
+        script: |
+          xcodebuild -exportArchive \
+            -archivePath $CM_BUILD_DIR/SharedExpense.xcarchive \
+            -exportOptionsPlist /tmp/ExportOptions.plist \
+            -exportPath $CM_BUILD_DIR/ipa
+
+    artifacts:
+      - $CM_BUILD_DIR/ipa/*.ipa
